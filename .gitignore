@@ -1,4 +1,5 @@
 __pycache__/
 *.pyc
+.omc/
 tests/_fixtures/
 strategy-validation-FRESH/

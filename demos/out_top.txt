@@ -1,0 +1,59 @@
+SELECTION VALIDATION REPORT
+==================================================================
+
+What this document is: a comparison of what the screen picked
+against what it COULD have picked on the same days.
+It states what that comparison supports. It does not tell
+anyone what to do with their money, and it does not predict
+any future result.
+
+VERDICT: NOT ESTABLISHED
+  5 pick day(s) is too few to separate selection from chance; this is a statement about sample size, not about the strategy.
+
+INPUTS
+  picks      : tests/_fixtures/picks_top.csv (5 rows)
+  universe   : tests/_fixtures/universe.csv
+  days used  : 5
+  picks/day  : 1
+  pool/day   : 10
+
+THE COMPARISON
+  Control = random draws of the same size, from the same day's
+  list of available names. Same-day is the point: comparing
+  against 'the market' would credit the screen for whatever
+  the day itself did.
+
+  random draws        : 2000 (seed 20261007)
+  observed mean       : +10.0000%
+  control mean        : +5.5148%
+  control spread (sd) : 1.2363%
+  control range       : +1.6000% to +9.0000%
+  observed percentile : 1.0000
+  gate (Bonferroni)   : 0.9500 for 1 variant(s)
+
+COST SENSITIVITY (applied to the picks, once per trade)
+    cost bps       mean net
+           0      +10.0000%
+           2       +9.9800%
+           5       +9.9500%
+          10       +9.9000%
+          25       +9.7500%
+          50       +9.5000%
+         100       +9.0000%
+  last positive cost tested: 100 bps
+  (grid only - the true breakeven lies between steps)
+
+WHAT THIS DOES NOT DO
+  - does not say whether to run this strategy, or trade it
+  - does not check look-ahead, survivorship, or fill
+    assumptions in how the client built their own backtest
+  - does not detect anything the input files do not contain
+
+SAMPLE SIZE
+  5 day(s). Below 20, the percentile is close to a coin
+  flip regardless of what the screen does. Treat this run
+  as a wiring check, not as evidence.
+
+------------------------------------------------------------------
+Every figure above is recomputable from the two input files and
+the seed printed in this report.

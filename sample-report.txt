@@ -1,0 +1,72 @@
+SELECTION VALIDATION REPORT
+==================================================================
+
+What this document is: a comparison of what the screen picked
+against what it COULD have picked on the same days.
+It states what that comparison supports. It does not tell
+anyone what to do with their money, and it does not predict
+any future result.
+
+VERDICT: NOT ESTABLISHED
+  8 pick day(s) is too few to separate selection from chance; this is a statement about sample size, not about the strategy.
+
+INPUTS
+  picks      : demos/sample_picks.csv (99 rows)
+  universe   : demos/sample_universe.csv
+  days used  : 8
+  picks/day  : varies
+  pool/day   : 59
+  picks vary : 6-22 per day
+  pool varies: 25-59 across days
+
+  per day:
+    date          picks   pool  picked mean
+    2026-09-16       22     59      0.6561%
+    2026-09-17       16     44      0.4264%
+    2026-09-18       10     32     -1.1343%
+    2026-09-21       16     34      0.5491%
+    2026-09-22        6     40     -0.8325%
+    2026-09-23       12     34     -1.7662%
+    2026-09-24        8     25      3.2163%
+    2026-09-25        9     25     -5.0838%
+
+THE COMPARISON
+  Control = random draws of the same size, from the same day's
+  list of available names. Same-day is the point: comparing
+  against 'the market' would credit the screen for whatever
+  the day itself did.
+
+  random draws        : 2000 (seed 20261007)
+  observed mean       : -0.4961%
+  control mean        : -0.4096%
+  control spread (sd) : 0.9469%
+  control range       : -3.5455% to +2.5663%
+  observed percentile : 0.4775
+  gate (Bonferroni)   : 0.9500 for 1 variant(s)
+
+COST SENSITIVITY (applied to the picks, once per trade)
+    cost bps       mean net
+           0       -0.4961%
+           2       -0.5161%
+           5       -0.5461%
+          10       -0.5961%
+          25       -0.7461%
+          50       -0.9961%
+         100       -1.4961%
+  no tested cost left the mean positive
+  (grid only - the true breakeven lies between steps)
+
+WHAT THIS DOES NOT DO
+  - does not say whether to run this strategy, or trade it
+  - does not check look-ahead, survivorship, or fill
+    assumptions in how the client built their own backtest
+  - does not detect anything the input files do not contain
+
+SAMPLE SIZE
+  8 day(s). Below 20, the percentile is close to a coin
+  flip regardless of what the screen does. Treat this run
+  as a wiring check, not as evidence.
+
+------------------------------------------------------------------
+Every figure above is recomputable from the two input files and
+the seed printed in this report.

@@ -30,21 +30,31 @@ HANGUL = re.compile(r"[가-힯]+")
 REPL = re.compile(r"�+")
 
 
-def main():
+def main(argv=None):
+    import argparse
+    ap = argparse.ArgumentParser(
+        description="private-data and mojibake scan before publishing")
+    ap.add_argument("--root", default=ROOT,
+                    help="directory to scan (default: package root)")
+    args = ap.parse_args(argv)
+    base = os.path.abspath(args.root)
+
     files = []
     for pat in ("**/*.py", "**/*.md", "**/*.csv", "**/*.txt"):
-        files += [f for f in glob.glob(os.path.join(ROOT, pat),
+        files += [f for f in glob.glob(os.path.join(base, pat),
                                        recursive=True)]
     files = sorted(set(files))
     files = [f for f in files if "FRESH" not in f and "__pycache__" not in f]
-    # This scanner's own source contains every prohibited pattern as a regex
-    # literal. Scanning itself can only ever be a false positive.
-    SELF = os.path.join("tools", "scan_privacy.py")
-    files = [f for f in files if os.path.relpath(f, ROOT) != SELF]
+    # Files whose job is to CONTAIN these patterns. scan_privacy.py holds the
+    # patterns as regex literals; test_scanner.py holds them as fixture inputs.
+    # Flagging either is guaranteed noise, every run, forever.
+    EXEMPT = {os.path.join("tools", "scan_privacy.py"),
+              os.path.join("tools", "test_scanner.py")}
+    files = [f for f in files if os.path.relpath(f, base) not in EXEMPT]
 
     flagged = 0
     for f in files:
-        rel = os.path.relpath(f, ROOT)
+        rel = os.path.relpath(f, base)
         if os.path.getsize(f) == 0:
             continue
         try:
@@ -54,13 +64,25 @@ def main():
             flagged += 1
             continue
 
+        # Lines that are themselves regex literals will always match: the
+        # scanner looking for "D:\" will find it in the pattern that looks for
+        # "D:\", and \d inside PASSED:\s*(\d+) reads as a drive letter. Check
+        # the prose and the data, not the pattern library.
+        PATTERN_LINE = re.compile(r"re\.(compile|search|findall|match|sub)\(")
+
+        def scandable(line):
+            return not PATTERN_LINE.search(line)
+
         problems = []
-        hits = PATH_HINT.findall(text)
+
+        hits = [p for ln in text.split("\n") if scandable(ln)
+                for p in PATH_HINT.findall(ln)]
         if hits:
             problems.append("path-like %s" % sorted(set(hits))[:3])
         for label, rx in (("cyrillic", CYRILLIC), ("kana", KANA),
                           ("hangul", HANGUL), ("replacement-char", REPL)):
-            m = rx.findall(text)
+            m = [hit for ln in text.split("\n") if scandable(ln)
+                 for hit in rx.findall(ln)]
             if m:
                 problems.append("%s %s" % (label, m[:2]))
 

@@ -119,13 +119,42 @@ python validate.py --picks demos/demo_picks_random.csv \
 The random client is the one that matters. **The tool has to be able to say
 no**, or it isn't measuring anything.
 
+## Sample deliverable
+
+**[SAMPLE.md](SAMPLE.md)** shows a real engagement end to end — a $100k+
+SEC Form 4 purchase screen tested on 8 trading days, 197 names, priced, with
+the report it produced.
+
+The verdict is `NOT ESTABLISHED`: eight days is too few to conclude anything.
+That sample leads the docs on purpose. A validator that only publishes its
+successes is an advertisement.
+
+## Demo
+
+```bash
+python demos/make_demo.py     # writes 60 days x 120 names into demos/
+python validate.py --picks demos/demo_picks_skilled.csv \
+                   --universe demos/demo_universe.csv --draws 2000
+python validate.py --picks demos/demo_picks_random.csv \
+                   --universe demos/demo_universe.csv --draws 2000
+```
+
+| Client | Actually has edge? | Verdict | Percentile |
+|---|---|---|---|
+| `skilled` | yes | SELECTION DETECTED | 1.0000 |
+| `random` | no | NOT SHOWN | 0.2495 |
+| `thin` | yes, small | SELECTION DETECTED | 1.0000 |
+
+The random client is the one that matters. **The tool has to be able to say
+no**, or it isn't measuring anything.
+
 ## Tests
 
 ```bash
 python tests/test_strategy_validation.py
 ```
 
-39 assertions. They lock down three things worth locking down:
+47 assertions. They lock down four things worth locking down:
 
 1. **Wrong input raises, never returns empty.** A pipeline that reports zero
    findings while being fed the wrong shape is indistinguishable from a
@@ -134,6 +163,13 @@ python tests/test_strategy_validation.py
 3. **The report contains no banned word** — recommend, advice, guarantee,
    conviction, smart money, worth watching, alpha, outperform, win rate. The
    wording ban is enforced by a test, not by a comment asking nicely.
+4. **Per-day detail survives the render.** It once printed a single
+   `pool/day` line taken from day one, which on the real Form 4 sample hid
+   that the pool moves between 25 and 59 names across eight days.
+
+Every README and SAMPLE.md figure is re-derived from a live run by
+`tools/check_readme.py` and `tools/check_sample.py`. Recalled numbers are
+wrong numbers.
 
 ## What this does not do
 

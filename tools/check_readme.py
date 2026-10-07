@@ -77,16 +77,31 @@ print("universe rows: %d (README says 7200)" % uni_rows)
 if uni_rows != 7200:
     BAD.append("universe rows %d != 7200" % uni_rows)
 
-# README must quote the control mean it prints in the example block
 readme = io.open(os.path.join(ROOT, "README.md"), encoding="utf-8").read()
-# README states the demo shape as days x names; 7200 rows must follow from it
-# rather than being pasted in separately (a pasted total can go stale).
+
+# The assertion count is read from the test suite rather than restated here -
+# a hardcoded 39 went stale the first time a test was added, and the failure
+# mode is silence: nothing complains until someone counts by hand.
+_t = subprocess.run(
+    [sys.executable, os.path.join("tests", "test_strategy_validation.py")],
+    capture_output=True, cwd=ROOT)
+_m = re.search(r"PASSED:\s*(\d+)", _t.stdout.decode("utf-8",
+                                                   errors="replace"))
+_n_assert = int(_m.group(1)) if _m else None
+if _n_assert is None:
+    BAD.append("could not read the assertion count from the test suite")
+
 for token in ("SELECTION DETECTED", "NOT SHOWN", "NOT ESTABLISHED",
-              "0.2495", "1.0000", "60 days", "120 names", "39 assertions"):
+              "0.2495", "1.0000", "SAMPLE.md"):
     if token not in readme:
         BAD.append("README missing %r" % token)
 
-if " x " not in readme or not re.search(r"60 days\s*x\s*120 names", readme):
+if _n_assert is not None and str(_n_assert) not in readme:
+    BAD.append("README does not state %d assertions" % _n_assert)
+
+# README states the demo shape as days x names; the 7200 total follows from
+# it, so both are checked and neither is pasted in separately.
+if not re.search(r"60 days\s*x\s*120 names", readme):
     BAD.append("README does not state the demo shape as '60 days x 120 names'")
 
 print("=" * 60)

@@ -3,3 +3,6 @@ __pycache__/
 .omc/
 tests/_fixtures/
 strategy-validation-FRESH/
+# upstream artifacts: keep make_sample.py reproducible without shipping 1.7MB
+demos/pricecache.json
+demos/backtest_buys.json

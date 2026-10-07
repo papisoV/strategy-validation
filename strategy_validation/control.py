@@ -66,9 +66,11 @@ def evaluate(universe_path, picks_path, draws=2000, seed=20261007,
                                    % ", ".join(sorted(missing)[:5])})
             continue
         vals = [avail[n] for n in chosen]
-        observed_day_means.append(sum(vals) / len(vals))
+        day_mean = sum(vals) / len(vals)
+        observed_day_means.append(day_mean)
         days.append({"date": date, "k": len(chosen),
-                     "pool": len(avail), "names": chosen})
+                     "pool": len(avail), "names": chosen,
+                     "mean": day_mean})
 
     if not days:
         raise DataError(
@@ -107,6 +109,12 @@ def evaluate(universe_path, picks_path, draws=2000, seed=20261007,
         "picks_per_day": days[0]["k"] if len({d["k"] for d in days}) == 1
                         else "varies",
         "pool_per_day": days[0]["pool"],
+        # Only surfaces when the available set actually changed size; a single
+        # "pool/day" line would otherwise hide that the days differ.
+        "pool_range": (min(d["pool"] for d in days),
+                       max(d["pool"] for d in days)),
+        "picks_range": (min(d["k"] for d in days),
+                        max(d["k"] for d in days)),
         "total_picks": len(picks),
         "observed_mean": observed_mean,
         "control_mean": statistics.fmean(control_means),

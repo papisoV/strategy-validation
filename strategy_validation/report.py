@@ -88,6 +88,24 @@ def render(result, cost=None, variants=1, input_name=""):
             L.append("     - %s: %s" % (s["date"], s["why"]))
     L.append("  picks/day  : %s" % result.get("picks_per_day"))
     L.append("  pool/day   : %s" % result.get("pool_per_day"))
+    if result.get("picks_range") and result["picks_range"][0] != \
+            result["picks_range"][1]:
+        L.append("  picks vary : %d-%d per day"
+                 % (result["picks_range"][0], result["picks_range"][1]))
+    if result.get("pool_range") and result["pool_range"][0] != \
+            result["pool_range"][1]:
+        L.append("  pool varies: %d-%d across days"
+                 % (result["pool_range"][0], result["pool_range"][1]))
+    # A per-day table so nothing is hidden behind a single average.
+    days = result.get("day_detail") or []
+    if days:
+        L.append("")
+        L.append("  per day:")
+        L.append("    %-12s %6s %6s %12s" % ("date", "picks", "pool",
+                                             "picked mean"))
+        for d in days:
+            L.append("    %-12s %6d %6d %11.4f%%"
+                     % (d["date"], d["k"], d["pool"], d["mean"] * 100.0))
     L.append("")
 
     L.append("THE COMPARISON")

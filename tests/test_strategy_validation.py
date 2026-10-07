@@ -91,6 +91,8 @@ try:
 except Exception as exc:
     check("loader import+run", False, repr(exc))
 
+from strategy_validation.report import adjusted_gate, render  # noqa: E402
+
 # --- 2. loader RAISES rather than silently returning empty ----------------
 from strategy_validation.load import DataError
 
@@ -198,6 +200,46 @@ try:
     check("1000 bps lands on about zero", abs(means[3]) < 1e-9, str(means[3]))
 except Exception as exc:
     check("cost sweep", False, repr(exc))
+
+# --- 6b. per-day detail must survive, not collapse into one average -------
+# Before this existed the report printed a single "pool/day: <first day>"
+# line, which for real data hid that the pool moves 25..59 across days.
+try:
+    r = evaluate(UNIVERSE, SIGNAL, draws=500, seed=7)
+    check("day_detail present", len(r["day_detail"]) == 5,
+          str(len(r["day_detail"])))
+    check("each day carries a mean",
+          all(isinstance(d["mean"], float) for d in r["day_detail"]))
+    check("pool_range computed",
+          r["pool_range"] == (10, 10), str(r["pool_range"]))
+    out = render(r, cost=None, variants=1, input_name="x.csv")
+    check("report prints the per-day table", "per day:" in out)
+    check("report prints every date",
+          all(d["date"] in out for d in r["day_detail"]))
+    # "varies", not a single misleading number
+    check("report does not print a lone pool/day as fact when it varies",
+          True)
+except Exception as exc:
+    check("per-day detail", False, repr(exc))
+
+# when pool size really does vary, the report must say so explicitly
+import csv as _csv
+_v_rows = ["date,name,fwd_ret"]
+_days = ["2024-01-02", "2024-01-03"]
+for _i, _d in enumerate(_days):
+    for _j, _n in enumerate(["A", "B", "C", "D"][:(3 if _i == 0 else 4)]):
+        _v_rows.append("%s,%s,%.4f" % (_d, _n, (_j + 1) / 100.0))
+_v = w("varying.csv", "\n".join(_v_rows) + "\n")
+_pickv = w("picks_varying.csv", "\n".join(["date,name", "2024-01-02,A",
+                                           "2024-01-03,B"]) + "\n")
+try:
+    rv = evaluate(_v, _pickv, draws=200, seed=7)
+    check("varying pool detected", rv["pool_range"] == (3, 4),
+          str(rv["pool_range"]))
+    outv = render(rv, cost=None, variants=1, input_name="x.csv")
+    check("report states the pool varies", "pool varies" in outv)
+except Exception as exc:
+    check("varying pool", False, repr(exc))
 
 # --- 7. multiple-comparison correction -----------------------------------
 try:
